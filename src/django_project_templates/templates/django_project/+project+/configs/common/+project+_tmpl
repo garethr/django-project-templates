@@ -1,0 +1,15 @@
+<VirtualHost *:80>
+    WSGIDaemonProcess $(project)-production user=$(project) group=$(project) threads=10 python-path=/srv/$(project)/lib/python2.6/site-packages
+    WSGIProcessGroup $(project)-production
+
+    WSGIScriptAlias / /srv/$(project)/releases/current/$(project)/configs/common/common.wsgi
+    <Directory /srv/$(project)/releases/current/$(project)>
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/error.log
+    LogLevel warn
+
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>

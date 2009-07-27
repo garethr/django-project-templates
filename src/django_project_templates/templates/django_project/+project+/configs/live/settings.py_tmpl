@@ -1,0 +1,1 @@
+from $(project).configs.common.settings import *
