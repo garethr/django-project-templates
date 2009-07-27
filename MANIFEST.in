@@ -1,0 +1,2 @@
+include LICENSE
+recursive-include src/django_project_templates/templates *
