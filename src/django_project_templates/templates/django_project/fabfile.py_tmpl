@@ -6,9 +6,9 @@ config.project_name = '$(project)'
 
 def local():
     "Use the local virtual server"
-    config.hosts = ['172.16.142.130']
+    config.fab_hosts = ['172.16.142.130']
     config.path = '/srv/$(project)'
-    config.user = '$(project)'
+    config.fab_user = '$(project)'
     config.virtualhost_path = "/configs/common/"
 
 # tasks
@@ -22,7 +22,7 @@ def setup():
     Setup a fresh virtualenv as well as a few useful directories, then run
     a full deployment
     """
-    require('hosts', provided_by=[local])
+    require('fab_hosts', provided_by=[local])
     require('path')
     
     sudo('aptitude install -y python-setuptools')
@@ -42,7 +42,7 @@ def deploy():
     required third party modules, install the virtual host and 
     then restart the webserver
     """
-    require('hosts', provided_by=[local])
+    require('fab_hosts', provided_by=[local])
     require('path')
 
     import time
@@ -57,7 +57,7 @@ def deploy():
 
 def deploy_version(version):
     "Specify a specific version to be made live"
-    require('hosts', provided_by=[local])
+    require('fab_hosts', provided_by=[local])
     require('path')
     
     config.version = version
@@ -70,7 +70,7 @@ def rollback():
     Limited rollback capability. Simple loads the previously current
     version of the code. Rolling back again will swap between the two.
     """
-    require('hosts', provided_by=[local])
+    require('fab_hosts', provided_by=[local])
     require('path')
 
     run('cd \$(path); mv releases/current releases/_previous;')
