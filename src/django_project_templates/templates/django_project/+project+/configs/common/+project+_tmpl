@@ -7,6 +7,8 @@
         Order deny,allow
         Allow from all
     </Directory>
+    
+    Alias /media/ /srv/$(project)/lib/python2.6/site-packages/django/contrib/admin/media/
 
     ErrorLog /var/log/apache2/error.log
     LogLevel warn
