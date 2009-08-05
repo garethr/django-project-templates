@@ -1,0 +1,98 @@
+<project name="$(project)" default="build">
+
+    <property name="project.name" value="$(project)"/>
+    <property name="base.dir" value="/srv/${project.name}"/>
+    <property name="svn.url" value=""/>
+
+    <path id="project.classpath">
+        <fileset dir="/opt/cruisecontrol-bin-2.8.2/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <taskdef resource="svntask.properties" classpathref="project.classpath"/>
+
+    <target name="checkout-debug">
+        <svn javahl="false">
+            <checkout url="${svn.url}" destPath="{base.dir}/debug" />
+        </svn>
+    </target>
+
+    <target name="checkout-snapshot">
+        <svn javahl="false">
+            <checkout url="${svn.url}" destPath="${base.dir}/snapshot" />
+        </svn>
+    </target>
+
+    <target name="update-debug" description="updates source code on debug">
+        <svn javahl="false">
+            <update dir="${base.dir}/debug"/>
+        </svn>
+    </target>
+
+    <target name="update-snapshot" description="updates source code on snapshot">
+        <svn javahl="false">
+            <update dir="${base.dir}/snapshot"/>
+        </svn>
+    </target>
+
+    <target name="restart-debug" description="tell webserver to restart on debug">
+        <exec executable="touch" dir="${base.dir}/debug/${project.name}/${project.name}/configs/debug">
+            <arg value="debug.wsgi"/>
+        </exec>
+    </target>
+
+    <target name="restart-snapshot" description="tell webserver to restart on snapshot">
+        <exec executable="touch" dir="${base.dir}/snapshot/${project.name}/${project.name}/configs/snapshot">
+            <arg value="snapshot.wsgi"/>
+        </exec>
+    </target>
+    
+    <target name="install-requirements-on-debug" description="Install any new items in the requirements file">
+        <exec executable="${base.dir}/debug/bin/pip" dir="${base.dir}/debug/${project.name}/" failonerror="true">
+          <arg value="install"/>
+          <arg value="-r"/>
+          <arg value="requirements.txt"/>
+       </exec>
+     </target>
+
+     <target name="install-requirements-on-snapshot" description="Install any new items in the requirements file">
+         <exec executable="${base.dir}/snapshot/bin/pip" dir="${base.dir}/snapshot/${project.name}/" failonerror="true">
+           <arg value="install"/>
+           <arg value="-r"/>
+           <arg value="requirements.txt"/>
+        </exec>
+      </target>
+
+    <target name="test" description="run django tests on debug">
+        <exec executable="${base.dir}/debug/bin/python" dir="${base.dir}/debug/${project.name}/${project.name}/configs/common" failonerror="true">
+          <arg value="manage.py"/>
+          <arg value="test"/>
+          <arg value="--xml"/>
+          <arg value="--settings=${project.name}.configs.debug.settings"/>
+       </exec>
+     </target>
+
+     <target name="migrate-debug" description="run migrations on debug">
+         <exec executable="${base.dir}/debug/bin/python" dir="${base.dir}/debug/${project.name}/${project.name}/configs/common" failonerror="true">
+           <arg value="manage.py"/>
+           <arg value="migrate"/>
+           <arg value="--settings=${project.name}.configs.debug.settings"/>
+        </exec>
+      </target>
+
+      <target name="migrate-snapshot" description="run migrations on snapshot">
+          <exec executable="${base.dir}/snapshot/bin/python" dir="${base.dir}/snapshot/${project.name}/${project.name}/configs/common" failonerror="true">
+            <arg value="manage.py"/>
+            <arg value="migrate"/>
+            <arg value="--settings=${project.name}.configs.snapshot.settings"/>
+         </exec>
+       </target>
+
+    <target name="build-no-test" description="build snapshot and runs migrations" depends="update-snapshot, install-requirements-on-snapshot, migrate-snapshot, restart-snapshot">
+    </target>
+
+    <target name="build" description="build snapshot only if tests pass on debug" depends="update-debug, install-requirements-on-debug, migrate-debug, restart-debug, test, build-no-test">
+    </target>
+    
+</project>

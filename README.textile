@@ -7,9 +7,9 @@ pre. python easy_install django-project-templates
 
 And then creating a project skeleton is as simple as:
 
-pre. paster create --template=django_project test
+pre. paster create --template=django_project example_project
 
 For bonus points you should probably be running this inside a virtualenv.
 
-Note that this project skeleton is still in flux. It definitely contains some things that are personal preference but it hopefully makes up for it with useful tools like a reasonably complete fabric based deployment setup. And yes, more documentation would be nice.
+Note that this project skeleton is still in flux. It definitely contains some things that are personal preference but it hopefully makes up for it with useful tools like a reasonably complete fabric based deployment setup and configs for CruiseControl. And yes, more documentation would be nice.
 

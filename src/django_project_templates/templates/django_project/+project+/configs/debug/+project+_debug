@@ -1,0 +1,18 @@
+<VirtualHost *:80>
+	SiteName $(project).debug
+    WSGIDaemonProcess $(project)-debug user=cruisecontrol group=cruisecontrol threads=10 python-path=/srv/$(project)/test/lib/python2.6/site-packages
+    WSGIProcessGroup $(project)-debug
+
+    WSGIScriptAlias / /srv/$(project)/debug/$(project)/$(project)/configs/debug/debug.wsgi
+    <Directory /srv/$(project)/debug/$(project)/$(project)>
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+	Alias /media/ /srv/$(project)/debug/lib/python2.6/site-packages/django/contrib/admin/media/
+
+    ErrorLog /var/log/apache2/error.log
+    LogLevel warn
+
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>

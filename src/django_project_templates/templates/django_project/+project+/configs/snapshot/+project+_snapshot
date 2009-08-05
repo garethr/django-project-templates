@@ -1,0 +1,18 @@
+<VirtualHost *:80>
+	SiteName $(project).snapshot
+    WSGIDaemonProcess $(project)-snapshot user=cruisecontrol group=cruisecontrol threads=10 python-path=/srv/$(project)/snapshot/lib/python2.6/site-packages
+    WSGIProcessGroup $(project)-debug
+
+    WSGIScriptAlias / /srv/$(project)/snapshot/$(project)/$(project)/configs/snapshot/snapshot.wsgi
+    <Directory /srv/$(project)/snapshot/$(project)/$(project)>
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+	Alias /media/ /srv/$(project)/snapshot/lib/python2.6/site-packages/django/contrib/admin/media/
+
+    ErrorLog /var/log/apache2/error.log
+    LogLevel warn
+
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>
