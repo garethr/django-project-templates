@@ -1,0 +1,17 @@
+<VirtualHost *:80>
+    WSGIDaemonProcess $(project)-production user=$(project) group=$(project) threads=10 python-path=/srv/$(project)/lib/python2.6/site-packages
+    WSGIProcessGroup $(project)-production
+
+    WSGIScriptAlias / /srv/$(project)/releases/current/$(project)/configs/live/live_admin.wsgi
+    <Directory /srv/$(project)/releases/current/$(project)>
+        Order deny,allow
+        Allow from all
+    </Directory>
+    
+    Alias /media/ /srv/$(project)/lib/python2.6/site-packages/django/contrib/admin/media/
+
+    ErrorLog /var/log/apache2/$(project)/error_admin.log
+    LogLevel warn
+
+    CustomLog /var/log/apache2/$(project)/access_admin.log combined
+</VirtualHost>
