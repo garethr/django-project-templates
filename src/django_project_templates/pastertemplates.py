@@ -31,3 +31,7 @@ class DjangoProjectTemplate(DjangoTemplate):
     def __init__(self, name):
         append_secret_key(self.vars)
         super(DjangoProjectTemplate, self).__init__(name)
+        
+class DjangoCruiseControlTemplate(Template):
+    _template_dir = 'templates/django_cruisecontrol_project'
+    summary = 'CruiseControl Template for a Django project'

@@ -3,7 +3,7 @@ import os
 
 setup(
     name='django-project-templates',
-    version = "0.7",
+    version = "0.8",
     description="Paster templates for creating Django projects",
     author='Gareth Rushgrove',
     author_email='gareth@morethanseven.net',
@@ -23,6 +23,7 @@ setup(
     entry_points="""
         [paste.paster_create_template]
         django_project=django_project_templates.pastertemplates:DjangoProjectTemplate
+        django_cruisecontrol_project=django_project_templates.pastertemplates:DjangoCruiseControlTemplate
     """,
     classifiers = [
         "Intended Audience :: Developers",
