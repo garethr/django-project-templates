@@ -1,1 +1,1 @@
-from $(project).configs.common.settings import *
+from bob.configs.common.settings import *

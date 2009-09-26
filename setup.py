@@ -3,7 +3,7 @@ import os
 
 setup(
     name='django-project-templates',
-    version = "0.8",
+    version = "0.10",
     description="Paster templates for creating Django projects",
     author='Gareth Rushgrove',
     author_email='gareth@morethanseven.net',

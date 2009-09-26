@@ -25,6 +25,7 @@ def setup():
     require('fab_hosts', provided_by=[local])
     require('path')
     
+    sudo('apt-get update')
     sudo('aptitude install -y python-setuptools')
     sudo('easy_install pip')
     sudo('pip install virtualenv')
@@ -34,7 +35,6 @@ def setup():
     sudo('cd /etc/apache2/sites-available/; a2dissite default;')
     run('mkdir -p \$(path); cd \$(path); virtualenv .;')
     run('cd \$(path); mkdir releases; mkdir shared; mkdir packages;', fail='ignore')
-    deploy()
 
 def deploy():
     """
@@ -84,7 +84,7 @@ def upload_tar_from_git():
     require('release', provided_by=[deploy, setup])
     "Create an archive from the current Git master branch and upload it"
     local('git archive --format=tar master | gzip > \$(release).tar.gz')
-    run('mkdir \$(path)/releases/\$(release)')
+    run('mkdir -p \$(path)/releases/\$(release)')
     put('\$(release).tar.gz', '\$(path)/packages/')
     run('cd \$(path)/releases/\$(release) && tar zxf ../../packages/\$(release).tar.gz')
     local('rm \$(release).tar.gz')
@@ -109,7 +109,7 @@ def symlink_current_release():
 def migrate():
     "Update the database"
     require('project_name')
-    run('cd \$(path)/releases/current/\$(project_name);  ../../../bin/python manage.py syncdb --noinput')
+    run('cd \$(path)/releases/current/\$(project_name)/configs/common;  \$(path)/bin/python manage.py syncdb --noinput')
 
 def restart_webserver():
     "Restart the web server"
