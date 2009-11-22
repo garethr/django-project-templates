@@ -1,28 +1,31 @@
+from fabric.api import *
+from fabric.contrib.files import exists
+
 # globals
 
-config.project_name = '$(project)'
+env.project_name = '$(project)'
 
 # environments
 
 def local():
     "Use the local virtual server"
-    config.fab_hosts = ['172.16.142.130']
-    config.path = '/srv/$(project)'
-    config.fab_user = '$(project)'
-    config.virtualhost_path = "/configs/common/"
+    env.hosts = ['localhost']
+    env.path = '/srv/$(project)'
+    env.user = '$(project)'
+    env.virtualhost_path = "/configs/common/"
 
 # tasks
 
 def test():
     "Run the test suite and bail out if it fails"
-    local("cd \$(project_name)/configs/common; python manage.py test", fail="abort")
+    local("cd \$(project_name)/configs/common; python manage.py test")
 
 def setup():
     """
     Setup a fresh virtualenv as well as a few useful directories, then run
     a full deployment
     """
-    require('fab_hosts', provided_by=[local])
+    require('hosts', provided_by=[local])
     require('path')
     
     sudo('apt-get update')
@@ -33,8 +36,15 @@ def setup():
     sudo('aptitude install -y libapache2-mod-wsgi')
     # we want rid of the defult apache config
     sudo('cd /etc/apache2/sites-available/; a2dissite default;')
-    run('mkdir -p \$(path); cd \$(path); virtualenv .;')
-    run('cd \$(path); mkdir releases; mkdir shared; mkdir packages;', fail='ignore')
+    sudo('mkdir -p %s' % env.path) 
+    run('cd %s; virtualenv .;' % env.path)
+    run('cd %s; bin/easy_install pip' % env.path)
+    if not exists('%s/releases' % env.path):
+        run('cd %s; mkdir releases;' % env.path)
+    if not exists('%s/shared' % env.path):
+        run('cd %s; mkdir shared;' % env.path)
+    if not exists('%s/packages' % env.path):
+        run('cd %s; mkdir packages;' % env.path)
 
 def deploy():
     """
@@ -42,11 +52,11 @@ def deploy():
     required third party modules, install the virtual host and 
     then restart the webserver
     """
-    require('fab_hosts', provided_by=[local])
+    require('hosts', provided_by=[local])
     require('path')
 
     import time
-    config.release = time.strftime('%Y%m%d%H%M%S')
+    env.release = time.strftime('%Y%m%d%H%M%S')
 
     upload_tar_from_git()
     install_requirements()
@@ -57,59 +67,75 @@ def deploy():
 
 def deploy_version(version):
     "Specify a specific version to be made live"
-    require('fab_hosts', provided_by=[local])
+    require('hosts', provided_by=[local])
     require('path')
-    
-    config.version = version
-    run('cd \$(path); rm releases/previous; mv releases/current releases/previous;')
-    run('cd \$(path); ln -s \$(version) releases/current')
+
+    env.version = version
+    run('cd %s; rm releases/previous; mv releases/current releases/previous;' % env.path)
+    run('cd %s; ln -s %s releases/current' % (env.path, env.version))
     restart_webserver()
 
 def rollback():
     """
     Limited rollback capability. Simple loads the previously current
-    version of the code. Rolling back again will swap between the two.
+    version of the code. Rolling back again will swap between the two,
+    NOT keep going back in time.
     """
-    require('fab_hosts', provided_by=[local])
+    require('hosts', provided_by=[local])
     require('path')
 
-    run('cd \$(path); mv releases/current releases/_previous;')
-    run('cd \$(path); mv releases/previous releases/current;')
-    run('cd \$(path); mv releases/_previous releases/previous;')
-    restart_webserver()
+    run('cd %s; mv releases/current releases/_previous;' % env.path)
+    run('cd %s; mv releases/previous releases/current;' % env.path)
+    run('cd %s; mv releases/_previous releases/previous;' % env.path)
+    restart_apache()
     
 # Helpers. These are called by other functions rather than directly
 
 def upload_tar_from_git():
-    require('release', provided_by=[deploy, setup])
+    require('release', provided_by=[deploy])
     "Create an archive from the current Git master branch and upload it"
-    local('git archive --format=tar master | gzip > \$(release).tar.gz')
-    run('mkdir -p \$(path)/releases/\$(release)')
-    put('\$(release).tar.gz', '\$(path)/packages/')
-    run('cd \$(path)/releases/\$(release) && tar zxf ../../packages/\$(release).tar.gz')
-    local('rm \$(release).tar.gz')
+    local('git archive --format=tar master | gzip > %s.tar.gz' % env.release)
+    run('mkdir -p %s/releases/%s' % (env.path, env.release))
+    put('%s.tar.gz' % env.release, '%s/packages/' % env.path)
+    run('cd %s/releases/%s && tar zxf ../../packages/%s.tar.gz' % (env.path, env.release, env.release))
+    local('rm %s.tar.gz' % env.release)
 
-def install_site():
+def upload_tar_from_svn():
+    require('release', provided_by=[deploy])
+    "Create an archive from the current SVN repo"
+    local('svn export %s%s/trunk %s --username autouser --password autouser' % (env.repo_address, env.project_name, env.release))
+    local('tar -pczf %s.tar.gz %s' % (env.release, env.release))
+    put('%s.tar.gz' % env.release, '%s/packages/' % env.path)
+    run('cd %s/releases && tar zxf ../packages/%s.tar.gz' % (env.path, env.release))
+    local('rm -fr %s' % env.release)
+    local('rm %s.tar.gz' % env.release)
+
+def install_site():    
     "Add the virtualhost file to apache"
-    require('release', provided_by=[deploy, setup])
-    sudo('cd \$(path)/releases/\$(release); cp \$(project_name)\$(virtualhost_path)\$(project_name) /etc/apache2/sites-available/')
-    sudo('cd /etc/apache2/sites-available/; a2ensite \$(project_name)') 
+    require('release', provided_by=[deploy])
+    sudo('cd %s/releases/%s; cp %s/%s%s%s /etc/apache2/sites-available/' % (env.path, env.release, env.project_name, env.project_name, env.virtualhost_path, env.project_name))
+    sudo('cd /etc/apache2/sites-available/; a2ensite %s' % env.project_name) 
+    if not exists('/var/log/apache2/%s' % env.project_name):
+        sudo('mkdir /var/log/apache2/%s' % env.project_name)
 
 def install_requirements():
     "Install the required packages from the requirements file using pip"
-    require('release', provided_by=[deploy, setup])
-    run('cd \$(path); pip install -E . -r ./releases/\$(release)/requirements.txt')
+    require('release', provided_by=[deploy])
+    sudo('cd %s; pip install -E . -r ./releases/%s/requirements.txt' % (env.path, env.release))
 
 def symlink_current_release():
     "Symlink our current release"
-    require('release', provided_by=[deploy, setup])
-    run('cd \$(path); rm releases/previous; mv releases/current releases/previous;', fail='ignore')
-    run('cd \$(path); ln -s \$(release) releases/current')
+    require('release', provided_by=[deploy])
+    if exists('%s/releases/previous' % env.path):
+        run('rm %s/releases/previous' % env.path)
+    if exists('%s/releases/current' % env.path):
+        run('mv %s/releases/current %s/releases/previous' % (env.path, env.path))
+    run('cd %s; ln -s %s releases/current' % (env.path, env.release))
 
 def migrate():
     "Update the database"
     require('project_name')
-    run('cd \$(path)/releases/current/\$(project_name)/configs/common;  \$(path)/bin/python manage.py syncdb --noinput')
+    run('cd %s/releases/current/%s/configs/common; %s/bin/python manage.py syncdb --noinput' % (env.path, env.project_name, env.path))
 
 def restart_webserver():
     "Restart the web server"
