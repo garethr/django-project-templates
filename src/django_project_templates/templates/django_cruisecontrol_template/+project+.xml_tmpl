@@ -1,0 +1,28 @@
+<cruisecontrol>
+    <project name="$(project)">
+
+        <plugin name="svn" classname="net.sourceforge.cruisecontrol.sourcecontrols.SVN"/>
+
+        <listeners>
+            <currentbuildstatuslistener file="logs/${project.name}/status.txt"/>
+        </listeners>
+
+        <modificationset quietperiod="10">
+                <svn localWorkingCopy="/srv/${project.name}/debig/"/>
+        </modificationset>
+
+        <schedule interval="60">
+            <ant anthome="apache-ant-1.7.0" buildfile="/srv/${project.name}/debug/${project.name}/build.xml"/>
+        </schedule>
+
+        <log dir="logs/${project.name}">
+            <merge dir="/srv/${project.name}/debug/${project.name}/${project.name}/configs/common/temp/xml/test_output.xml"/>
+        </log>
+
+        <publishers>
+            <artifactspublisher file="/srv/${project.name}/debug/${project.name}/${project.name}/configs/common/temp/xml/test_output.xml" dest="/opt/cruisecontrol-bin-2.8.2/logs/${project.name}/"/>
+            <execute command="rm /srv/${project.name}/debug/${project.name}/${project.name}/configs/common/temp/xml/test_output.xml"/>
+        </publishers>
+
+    </project>
+</cruisecontrol>
