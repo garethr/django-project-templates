@@ -1,0 +1,9 @@
+*.pyc
+*.db
+pip-log.txt
+build
+error.log
+*~
+$(project)/gzip/*
+local_settings.py
+.idea

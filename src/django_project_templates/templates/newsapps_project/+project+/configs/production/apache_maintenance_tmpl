@@ -1,0 +1,36 @@
+<VirtualHost *:80>
+    ServerName $(project).$(production_domain)
+    ServerAlias www.$(project).$(production_domain)
+    
+    SetEnvIf X-Forwarded-For "^163\.192\..*\..*" trib
+    <Location /> # until launch
+          Order Deny,Allow
+          Allow from all
+          # Allow from env=trib
+    </Location>
+    
+    Redirect permanent /favicon.ico http://media.$(production_domain)/$(project)/na_media/favicon.ico
+    
+    Alias /robots.txt /home/newsapps/sites/$(project)/repository/$(project)/assets/robots.txt
+
+    ErrorLog /home/newsapps/logs/$(project).error.log
+    LogLevel warn
+
+    SetEnvIf X-Forwarded-For "^.*\..*\..*\..*" is-forwarder
+    LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+    LogFormat "[%h] %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio2
+    CustomLog /home/newsapps/logs/$(project).access.log combinedio env=is-forwarder
+    CustomLog /home/newsapps/logs/$(project).access.log combinedio2 env=!is-forwarder
+
+    ServerSignature Off
+    
+    RewriteEngine on
+    # canonical hostname
+    RewriteCond %{HTTP_HOST} !^$(project).$(production_domain) [NC] 
+    RewriteRule ^/(.*)  http://$(project).$(production_domain)/$1 [L,R]
+    
+    DocumentRoot /home/newsapps/sites/$(project)/repository/$(project)/assets/
+    
+    RewriteCond %{REQUEST_URI} !/maintenance.html$ 
+    RewriteRule $ /maintenance.html [R=302,L]
+</VirtualHost>

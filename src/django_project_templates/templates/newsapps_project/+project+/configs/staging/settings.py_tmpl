@@ -1,0 +1,36 @@
+from $(project).configs.common.settings import *
+
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
+
+# Database
+DATABASE_HOST = 'db.$(staging_domain)'
+DATABASE_PORT = '5433'
+DATABASE_USER = '$(project)'
+DATABASE_PASSWORD = '$(db_password)'
+
+# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# trailing slash if there is a path component (optional in other cases).
+# Examples: "http://media.lawrence.com", "http://example.com/media/"
+MEDIA_URL = 'http://media.$(staging_domain)/$(project)/'
+
+# Predefined domain
+MY_SITE_DOMAIN = '$(project).$(staging_domain)'
+
+# Email
+EMAIL_HOST = 'mail.$(staging_domain)'
+EMAIL_PORT = 25
+
+# Caching
+CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
+
+# S3
+AWS_S3_URL = 's3://media.$(staging_domain)/$(project)/'
+
+# Trib IPs for security
+INTERNAL_IPS = ()
+
+# logging
+import logging.config
+LOG_FILENAME = os.path.join(os.path.dirname(__file__), 'logging.conf')
+logging.config.fileConfig(LOG_FILENAME)
