@@ -22,7 +22,12 @@ def append_secret_key(vars):
     vars.append(
         var('secret_key', 'Secret key', default=default_key)
     )
-
+    
+def append_db_password(vars):
+    default_key = ''.join([choice('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') for i in range(10)])
+    vars.append(
+        var('db_password', 'DB Password', default=default_key)
+)
 
 class DjangoProjectTemplate(DjangoTemplate):
     _template_dir = 'templates/django_project'
@@ -35,3 +40,24 @@ class DjangoProjectTemplate(DjangoTemplate):
 class DjangoCruiseControlTemplate(Template):
     _template_dir = 'templates/django_cruisecontrol_project'
     summary = 'CruiseControl Template for a Django project'
+
+class NewsAppsProjectTemplate(DjangoTemplate):
+    _template_dir = 'templates/newsapps_project'
+    summary = 'Template for a News Applications Django project'
+    
+    vars = [
+        var('staging_domain',
+            'Parent domain for your staging site.',
+            default="beta.example.com"),
+        var('production_domain',
+            'Parent domain for your production site.',
+            default="example.com"),
+        var('repository_url',
+            'Git repo where your project will be deployed from.',
+            default="git@git.example.com:example/project_name.git"),
+    ]
+    
+    def __init__(self, name):
+        append_secret_key(self.vars)
+        append_db_password(self.vars)
+        super(NewsAppsProjectTemplate, self).__init__(name)

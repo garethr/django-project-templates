@@ -1,15 +1,30 @@
-This project currently contains one template for creating a new Django project. It's like running django-admin.py startproject but it creates a
-more complete application skeleton.
+h2. Django-project-templates
 
-All you need to do is install the package from PyPi like so:
+This project contains templates for creating a new Django project. It's like running django-admin.py startproject but it creates a more complete application skeleton.
+
+All you need to do is install the package from PyPi like so. Note that it will install PasteScript, Cheetah and Fabric. So you may want to create a new virtualenv.
 
 pre. python easy_install django-project-templates
+
+Alternatively you can install it from a git clone with:
+
+pre. python setup.py install
 
 And then creating a project skeleton is as simple as:
 
 pre. paster create --template=django_project example_project
 
-For bonus points you should probably be running this inside a virtualenv.
-
 Note that this project skeleton is still in flux. It definitely contains some things that are personal preference but it hopefully makes up for it with useful tools like a reasonably complete fabric based deployment setup and configs for CruiseControl. And yes, more documentation would be nice.
 
+h2. News apps template
+
+The folks over at the Chicago Tribune have kindly contributed a template they use for their projects. You can find more about that on "this blog post":http://blog.apps.chicagotribune.com/2010/03/08/advanced-django-project-layout/.
+
+pre. paster create --template=newsapps_project example_project
+
+The newsapps_project template is very similar to django_project. Major differences include: 
+* A much larger "fabric deployment script with a bunch of goodies":http://blog.apps.chicagotribune.com/2010/02/10/refactoring-fabric/
+* Removed and refactored config directories. There are now dirs for production, staging and common.
+* Tightly integrated with Chicago Tribune's "News apps Amazon EC2 Image":http://blog.apps.chicagotribune.com/2010/02/17/our-geodjango-amazon-ec2-image-for-news-apps/ (ami-ff17fb96 on us-east)
+* Removed CruiseControl stuff.
+* Added a 'manage' script in the project root to make management commands accessible.
